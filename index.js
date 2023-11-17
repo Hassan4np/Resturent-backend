@@ -122,7 +122,11 @@ async function run() {
             const result = await cours.toArray();
             res.send(result)
         });
-
+        app.post("/bistoboss", async(req, res) => {
+            const data = req.body;
+            const result = await ServicesCollation.insertOne(data);
+            res.send(result)
+        })
         app.get('/bistoboss/:id', async(req, res) => {
             const id = req.params.id;
             const quary = { _id: new ObjectId(id) };
