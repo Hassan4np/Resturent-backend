@@ -93,7 +93,7 @@ async function run() {
             const result = await UsersCollation.insertOne(data);
             res.send(result)
         });
-        app.get('/users', verifyToken, verifyAdmin, async(req, res) => {
+        app.get('/users', async(req, res) => {
             // const email = req.query.email;
             // const query = { email: email }
             const result = await UsersCollation.find().toArray();
@@ -124,6 +124,7 @@ async function run() {
         });
         app.post("/bistoboss", async(req, res) => {
             const data = req.body;
+            console.log(data)
             const result = await ServicesCollation.insertOne(data);
             res.send(result)
         })
@@ -134,7 +135,30 @@ async function run() {
             const result = await ServicesCollation.findOne(quary);
             res.send(result)
         });
+        app.patch("/bistoboss/:id", async(req, res) => {
+            const id = req.params.id;
+            const data = req.body;
+            const filter = { _id: new ObjectId(id) }
 
+            const updatedock = {
+                $set: {
+                    name: data.name,
+                    category: data.category,
+                    price: data.price,
+                    recipe: data.recipe,
+                    image: data.image,
+                }
+            };
+            const result = await ServicesCollation.updateOne(filter, updatedock);
+            return res.send(result)
+        })
+        app.delete('/bistoboss/:id', async(req, res) => {
+            const id = req.params.id;
+            const quary = { _id: new ObjectId(id) }
+            console.log(id)
+            const result = await ServicesCollation.deleteOne(quary);
+            res.send(result)
+        })
         app.post('/cards', async(req, res) => {
             const data = req.body;
             console.log(data)
