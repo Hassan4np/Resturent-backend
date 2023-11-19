@@ -9,10 +9,17 @@ require("dotenv").config();
 const port = process.env.PORT || 5000;
 
 //middle were data bancend get koror jonno.
-app.use(cors());
+app.use(cors({
+    origin: ['https://bistoboss-fbe6f.web.app', 'https://bistoboss-fbe6f.firebaseapp.com'],
+    // origin: ['http://localhost:5173', 'http://localhost:5174'],
+    credentials: true
+}));
 app.use(express.json());
 // app.use(cookiesParser());
-
+//--------------------->
+//backend api: https://resturent-backend.vercel.app
+//cliend api : https: //bistoboss-fbe6f.web.app
+//--------------------->
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.uruvxpx.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -94,8 +101,6 @@ async function run() {
             res.send(result)
         });
         app.get('/users', async(req, res) => {
-            // const email = req.query.email;
-            // const query = { email: email }
             const result = await UsersCollation.find().toArray();
             res.send(result)
         });
