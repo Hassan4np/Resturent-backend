@@ -6,12 +6,13 @@ var jwt = require('jsonwebtoken');
 const e = require('express');
 // const cookiesParser = require('cookie-parser');
 require("dotenv").config();
+const stripe = require("stripe")(process.env.SERCITE_PAYMET_KEY)
 const port = process.env.PORT || 5000;
 
 //middle were data bancend get koror jonno.
 app.use(cors({
-    origin: ['https://bistoboss-fbe6f.web.app', 'https://bistoboss-fbe6f.firebaseapp.com'],
-    // origin: ['http://localhost:5173', 'http://localhost:5174'],
+    // origin: ['https://bistoboss-fbe6f.web.app', 'https://bistoboss-fbe6f.firebaseapp.com'],
+    origin: ['http://localhost:5173', 'http://localhost:5174'],
     credentials: true
 }));
 app.use(express.json());
@@ -43,6 +44,7 @@ async function run() {
         const databases = client.db("BistobossDB");
         const BookingCollation = databases.collection("cards");
         const UsersCollation = databases.collection("users");
+        const PaymentCollation = databases.collection("payments");
 
         app.post('/jwt', async(req, res) => {
                 // console.log(req.headers)
@@ -182,6 +184,63 @@ async function run() {
             const quary = { _id: new ObjectId(id) }
             const result = await BookingCollation.deleteOne(quary);
             res.send(result)
+        });
+
+        //----- PAYMENT METHON FUNCTION------->
+
+        app.post('/create-payment-intent', async(req, res) => {
+                const { price } = req.body;
+                const amount = parseInt(price * 100);
+                console.log(amount)
+                const paymentIntent = await stripe.paymentIntents.create({
+                    amount: amount,
+                    currency: "usd",
+                    payment_method_types: ['card']
+                })
+                res.send({
+                    clientSecret: paymentIntent.client_secret,
+                });
+            })
+            //payment user cards info detais post sectin-------------->
+        app.get("/payments/:email", verifyToken, async(req, res) => {
+            const query = { email: req.params.email }
+            if (req.params.email !== req.decoded.email) {
+                return res.status(403).send({ message: "fordidene access" })
+            }
+            const result = await PaymentCollation.find(query).toArray()
+            res.send(result)
+        })
+        app.post("/payments", verifyToken, async(req, res) => {
+            const payment = req.body;
+            console.log(payment)
+            const paymentResult = await PaymentCollation.insertOne(payment);
+            const query = {
+                _id: {
+                    $in: payment.cartIds.map(id => new ObjectId(id))
+                }
+            }
+            const deleteresult = await BookingCollation.deleteMany(query);
+            res.send({ paymentResult, deleteresult })
+        });
+        //admin infrmation data load-------------->
+
+        app.get("/admin-stats", async(req, res) => {
+            const users = await UsersCollation.estimatedDocumentCount();
+            const menusItems = await ServicesCollation.estimatedDocumentCount();
+            const orders = await PaymentCollation.estimatedDocumentCount();
+            const result = await PaymentCollation.aggregate([{
+                    $group: {
+                        _id: null,
+                        totalRevenue: {
+                            $sum: "$price"
+                        }
+                    }
+                }
+
+            ]).toArray();
+            const revenu = result.length > 0 ? result[0].totalRevenue : 0;
+
+            res.send({ users, menusItems, orders, revenu })
         })
 
         // Send a ping to confirm a successful connection
