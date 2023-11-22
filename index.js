@@ -11,8 +11,8 @@ const port = process.env.PORT || 5000;
 
 //middle were data bancend get koror jonno.
 app.use(cors({
-    // origin: ['https://bistoboss-fbe6f.web.app', 'https://bistoboss-fbe6f.firebaseapp.com'],
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: ['https://bistoboss-fbe6f.web.app', 'https://bistoboss-fbe6f.firebaseapp.com'],
+    // origin: ['http://localhost:5173', 'http://localhost:5174'],
     credentials: true
 }));
 app.use(express.json());
